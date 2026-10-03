@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Bag — AERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23121211'/%3E%3Cpath d='M6 24 L14 8h4l-8 16z' fill='%23ff4d1c'/%3E%3Cpath d='M16 24 L22 8h4l-6 16z' fill='%23fff'/%3E%3C/svg%3E">
+<script>window.__preStart = performance.now();</script>
+</head>
+<body data-page="cart">
+
+<div class="preloader" id="preloader">
+  <div class="pre-brand">
+    <svg class="mark" viewBox="0 0 34 24" aria-hidden="true"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="#ff4d1c"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg>
+    <span style="animation-delay:.05s">A</span><span style="animation-delay:.1s">E</span><span style="animation-delay:.15s">R</span><span style="animation-delay:.2s">O</span><span style="animation-delay:.25s">N</span>
+  </div>
+  <div class="pre-bar"><i></i></div>
+</div>
+
+<div id="nav-root"></div>
+
+<main id="main">
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="index.html">Home</a> <span>/</span> <span>Bag</span></p>
+    <h1 class="display">Your Bag</h1>
+  </div>
+
+  <div class="container-wide cart-layout" id="cartLayout">
+    <div>
+      <div class="cart-items" id="cartItems"></div>
+      <div style="margin-top:26px;display:flex;gap:14px;flex-wrap:wrap">
+        <a class="btn btn-ghost" href="shop.html">← Continue Shopping</a>
+        <button class="btn btn-sm" id="clearCart" style="color:var(--mut);font-weight:600">Clear bag</button>
+      </div>
+    </div>
+
+    <aside class="summary-card" id="summaryCard">
+      <h3>Order Summary</h3>
+      <div class="sum-line"><span>Subtotal</span><b id="sumSub">$0</b></div>
+      <div class="sum-line"><span>Shipping</span><b id="sumShip">—</b></div>
+      <div class="sum-line discount" id="sumDiscRow" style="display:none"><span>Discount (<span id="sumDiscCode"></span>)</span><b id="sumDisc">–$0</b></div>
+      <div class="sum-line total"><span>Total</span><b id="sumTotal">$0</b></div>
+      <div id="promoZone">
+        <div class="promo-row">
+          <input type="text" id="promoInput" placeholder="Promo code">
+          <button class="btn btn-dark btn-sm" id="promoBtn">Apply</button>
+        </div>
+        <p class="promo-msg" id="promoMsg"></p>
+      </div>
+      <a class="btn btn-accent btn-lg btn-block" href="checkout.html" id="checkoutBtn">Proceed to Checkout</a>
+      <p class="sum-note"><span id="truckIcon"></span> Free standard shipping on orders over $150.</p>
+    </aside>
+  </div>
+
+  <div class="container-wide" id="cartEmpty" style="display:none">
+    <div class="empty-state">
+      <span id="bagIcon"></span>
+      <h3>Your bag is empty</h3>
+      <p>Looks like you haven’t added anything yet. Let’s fix that.</p>
+      <a class="btn btn-dark btn-lg" href="shop.html">Start Shopping</a>
+    </div>
+  </div>
+</main>
+
+<div id="footer-root"></div>
+<div id="modal-root"></div>
+<div class="toast-stack" id="toasts"></div>
+
+<script src="assets/js/db.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/cart.js"></script>
+</body>
+</html>

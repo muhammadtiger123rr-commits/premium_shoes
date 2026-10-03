@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account — AERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23121211'/%3E%3Cpath d='M6 24 L14 8h4l-8 16z' fill='%23ff4d1c'/%3E%3Cpath d='M16 24 L22 8h4l-6 16z' fill='%23fff'/%3E%3C/svg%3E">
+<script>window.__preStart = performance.now();</script>
+</head>
+<body data-page="register">
+
+<div class="preloader" id="preloader">
+  <div class="pre-brand">
+    <svg class="mark" viewBox="0 0 34 24" aria-hidden="true"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="#ff4d1c"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg>
+    <span style="animation-delay:.05s">A</span><span style="animation-delay:.1s">E</span><span style="animation-delay:.15s">R</span><span style="animation-delay:.2s">O</span><span style="animation-delay:.25s">N</span>
+  </div>
+  <div class="pre-bar"><i></i></div>
+</div>
+
+<div id="nav-root"></div>
+
+<main id="main">
+  <div class="auth-wrap rv in">
+    <div class="auth-side">
+      <span class="brand"><svg class="mark" viewBox="0 0 34 24"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="#ff4d1c"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg><span>AERON</span></span>
+      <h2 class="display">Join the Aeron Club</h2>
+      <p>Members get early access to drops, order tracking and a wishlist that follows them everywhere.</p>
+      <svg class="big-mark" viewBox="0 0 34 24"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="currentColor"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg>
+    </div>
+    <div class="auth-form">
+      <h1>Create Account</h1>
+      <p class="sub">Takes less than a minute.</p>
+      <form id="regForm" novalidate>
+        <div class="field"><label for="rgName">Full name</label><input id="rgName" placeholder="Your name" autocomplete="name"><p class="field-err" hidden></p></div>
+        <div class="field"><label for="rgEmail">Email</label><input type="email" id="rgEmail" placeholder="you@example.com" autocomplete="email"><p class="field-err" hidden></p></div>
+        <div class="field"><label for="rgPass">Password</label><input type="password" id="rgPass" placeholder="Min. 6 characters" autocomplete="new-password"><p class="field-err" hidden></p></div>
+        <div class="field"><label for="rgPass2">Confirm password</label><input type="password" id="rgPass2" placeholder="Repeat password" autocomplete="new-password"><p class="field-err" hidden></p></div>
+        <p class="field-err" id="rgGlobal" style="margin-bottom:12px"></p>
+        <button class="btn btn-dark btn-lg btn-block" type="submit">Create Account</button>
+      </form>
+      <p class="auth-links">Already have an account? <a href="login.html">Sign in</a></p>
+    </div>
+  </div>
+</main>
+
+<div id="footer-root"></div>
+<div id="modal-root"></div>
+<div class="toast-stack" id="toasts"></div>
+
+<script src="assets/js/db.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+</body>
+</html>

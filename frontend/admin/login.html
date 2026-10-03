@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Sign In — AERON</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/admin.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23121211'/%3E%3Cpath d='M6 24 L14 8h4l-8 16z' fill='%23ff4d1c'/%3E%3Cpath d='M16 24 L22 8h4l-6 16z' fill='%23fff'/%3E%3C/svg%3E">
+</head>
+<body class="admin" data-admin-page="login">
+
+<div class="admin-login">
+  <div class="al-brand-side">
+    <span class="brand">
+      <svg class="mark" viewBox="0 0 34 24"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="#ff4d1c"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg>
+      AERON
+    </span>
+    <div class="al-hero">
+      <h1>Run the<br>Business<br><span>Like a Pro.</span></h1>
+      <p>Products, orders, customers and categories — one console for the whole AERON storefront.</p>
+      <div class="al-stats">
+        <div><b>10+</b><span>Products</span></div>
+        <div><b>24/7</b><span>Sync</span></div>
+        <div><b>100%</b><span>Frontend</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="al-form-side">
+    <div class="al-card">
+      <h2>Admin Sign In</h2>
+      <p class="sub">Authorized staff only.</p>
+      <div class="demo-hint">Demo credentials — email <b>admin@aeron.store</b>, password <b>admin123</b></div>
+      <form id="alForm" novalidate>
+        <div class="a-field"><label>Email</label><input type="email" id="alEmail" placeholder="admin@aeron.store" autocomplete="username"><p class="field-err" hidden>Email is required.</p></div>
+        <div class="a-field"><label>Password</label><input type="password" id="alPass" placeholder="Password" autocomplete="current-password"><p class="field-err" hidden>Password is required.</p></div>
+        <p class="field-err" id="alGlobal" style="margin-bottom:10px"></p>
+        <button class="a-btn a-btn-dark" type="submit" style="width:100%;justify-content:center;padding:13px">Sign In to Dashboard</button>
+      </form>
+      <p style="text-align:center;font-size:12.5px;color:var(--a-mut);margin-top:18px"><a href="../index.html" style="font-weight:600">← Back to storefront</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/db.js"></script>
+<script src="../assets/js/ui.js"></script>
+<script src="../assets/js/admin.js"></script>
+</body>
+</html>
