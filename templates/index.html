@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AERON — Engineered Footwear{% endblock %}
+{% block meta_description %}<meta name="description" content="AERON — premium performance and lifestyle footwear. Engineered for motion, designed for the city.">
+{% endblock %}
+{% block global_bootstrap %}window.__CSRF = "{{ csrf_token }}"; {% endblock %}
+{% block page_id %}home{% endblock %}
+
+{% block content %}
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container-wide hero-inner">
+      <div class="hero-copy">
+        <p class="hero-eyebrow rv" id="heroEyebrow">{{ featured.hero_label|default:"Featured Drop — SS26" }}</p>
+        <h1 class="display hero-title rv" data-d="1" id="heroTitle">{{ featured.hero_l1|default:"Pulse" }}<br>{% if featured.hero_l2 %}<span class="stroke">{{ featured.hero_l2 }}</span>{% else %}<span class="stroke">Runner</span> <span class="accent">01</span>{% endif %}</h1>
+        <p class="hero-sub rv" data-d="2" id="heroSub">{{ featured.description|default:"Our fastest daily trainer ever. Cloudform foam, a carbon-tuned plate and an AeroWeave upper at just 238 grams." }}</p>
+        <div class="hero-ctas rv" data-d="3">
+          {% if featured %}
+          <a class="btn btn-dark btn-lg mg" id="heroCta" href="{% url 'product' featured.id %}">Shop the Pulse 01</a>
+          {% endif %}
+          <a class="btn btn-ghost btn-lg" href="{% url 'shop' %}">Explore Collection</a>
+        </div>
+        <div class="hero-meta rv" data-d="4" id="heroMeta">
+          {% if featured %}
+          <div><b id="heroPrice">${{ featured.display_price }}</b><span>Price</span></div>
+          <div><b id="heroRating">{{ featured.rating|floatformat:1 }} ★</b><span>{{ featured.reviews }} Reviews</span></div>
+          {% endif %}
+          <div><b>238 g</b><span>Featherlight</span></div>
+        </div>
+      </div>
+      <div class="hero-stage rv" data-d="2">
+        <div class="hero-blob" data-parallax="0.06"></div>
+        <div class="hero-ring"></div>
+        <img class="hero-shoe" id="heroShoe" src="{% static 'assets/images/hero.png' %}" alt="AERON Pulse Runner 01" data-parallax-mouse>
+        <div class="hero-tag t1"><span id="tagIcon"></span> Cloudform midsole</div>
+        <div class="hero-tag t2"><span id="tagIcon2"></span> Carbon-tuned plate</div>
+      </div>
+    </div>
+    <div class="hero-scroll">Scroll</div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="marqueeTrack">
+      <span>Engineered for motion <em>✦</em> Free shipping over $150 <em>✦</em> New season drops weekly <em>✦</em> AERON Footwear Co. <em>✦</em></span>
+    </div>
+  </div>
+
+  <!-- NEW ARRIVALS -->
+  <section class="section">
+    <div class="container-wide">
+      <div class="sec-head rv">
+        <div><span class="overline">Just landed</span><h2 class="display">New Arrivals</h2></div>
+        <a class="link-more" href="{{ new_arrivals_href }}">View all <span id="arrowNew"></span></a>
+      </div>
+      <div class="grid-products" id="newArrivals">
+        {% for product in new_arrivals %}
+        <article class="pcard rv"
+          data-id="{{ product.id }}"
+          {% if forloop.counter > 4 %}style="display:none"{% endif %}>
+          <a class="pcard-media" href="{% url 'product' product.id %}" aria-label="{{ product.name }}">
+            <img class="pcard-img" src="{{ product.image_src }}" alt="{{ product.name }}" loading="lazy">
+            {% if product.hover_src %}
+            <img class="pcard-alt" src="{{ product.hover_src }}" alt="" loading="lazy" onerror="this.remove()">
+            {% endif %}
+            <div class="pcard-badges">
+              {% if product.is_new %}<span class="pbadge pb-new">New</span>{% endif %}
+              {% if product.on_sale %}<span class="pbadge pb-sale">-{{ product.discount_percent }}%</span>{% endif %}
+            </div>
+            <div class="pcard-quick">
+              <button class="qbtn" data-action="quickview" data-id="{{ product.id }}" title="Quick view" aria-label="Quick view"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
+              <button class="qbtn{% if product.id in wishlist_ids %} on{% endif %}" data-action="wish" data-url="{% url 'wishlist_toggle' product.id %}" data-id="{{ product.id }}" title="Wishlist" aria-label="Toggle wishlist"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.2S4.8 15.7 2.9 11.3A5.3 5.3 0 0 1 12 6.6a5.3 5.3 0 0 1 9.1 4.7C19.2 15.7 12 20.2 12 20.2z"/></svg></button>
+            </div>
+            {% if product.low_stock %}<span class="pstock">Only {{ product.stock }} left</span>{% endif %}
+          </a>
+          <div class="pcard-info">
+            <div class="pcard-row1">
+              <h3 class="pcard-name"><a href="{% url 'product' product.id %}">{{ product.name }}</a></h3>
+              <div class="pcard-price">
+                {% if product.on_sale %}
+                <s>${{ product.price|floatformat:"-2" }}</s><b class="sale">${{ product.display_price|floatformat:"-2" }}</b>
+                {% else %}
+                <b>${{ product.display_price|floatformat:"-2" }}</b>
+                {% endif %}
+              </div>
+            </div>
+            <div class="pcard-row2">
+              <span class="pcard-cat">{{ product.get_gender_display }} · {{ product.get_sport_display }}</span>
+              <span class="pcard-rate">
+                <span class="stars" aria-label="Rated {{ product.rating }} out of 5">
+                  <span class="stars-bg">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                  <span class="stars-fg" data-fill="{% widthratio product.rating 5 100 %}" style="width:0">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                </span>
+                <em>({{ product.reviews }})</em>
+              </span>
+            </div>
+            {% if product.has_colors %}
+            <div class="pcard-colors" role="group" aria-label="Color">
+              <p class="pcard-colors-lbl">Color</p>
+              <div class="color-row">
+                {% for c in product.color_list %}
+                <button type="button" class="color-dot" data-action="color" data-color="{{ c.name }}" data-hex="{{ c.hex }}" style="background:{{ c.hex }}" title="{{ c.name }}" aria-label="{{ c.name }}" aria-pressed="false"></button>
+                {% endfor %}
+              </div>
+              <p class="field-err" data-color-err hidden>Please choose a color.</p>
+            </div>
+            {% endif %}
+            <button class="btn btn-block pcard-add" data-action="add" data-id="{{ product.id }}" data-url="{% url 'add_to_cart' product.id %}"{% if product.stock <= 0 %} disabled{% endif %}>
+              {% if product.stock <= 0 %}Sold Out{% else %}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 8h11.6l-.9 12.2H7.1L6.2 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>Add to Cart</span>{% endif %}
+            </button>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED CATEGORIES -->
+  <section class="section" style="padding-top:0">
+    <div class="container-wide">
+      <div class="sec-head rv">
+        <div><span class="overline">Shop by</span><h2 class="display">Featured Categories</h2></div>
+      </div>
+      <div class="cat-tiles" id="catTiles">
+        {% for c in categories %}
+        <a class="cat-tile rv" href="{% url 'category' c.slug %}">
+          <img src="{{ c.image_src }}" alt="{{ c.name }}">
+          <div class="cat-tile-body"><div><h3>{{ c.name }}</h3><p>{{ c.num_products }} styles</p></div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></div>
+        </a>
+        {% endfor %}
+      </div>
+      <div class="sport-list" id="sportList">
+        {% for c in categories %}
+        <a class="sport-pill rv" href="{% url 'category' c.slug %}"><span>{{ c.name }}</span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- TRENDING -->
+  <section class="section" style="padding-top:0">
+    <div class="container-wide">
+      <div class="sec-head rv">
+        <div><span class="overline">Heat check</span><h2 class="display">Trending Sneakers</h2></div>
+        <a class="link-more" href="{{ sneakers_href }}">All sneakers <span id="arrowTrend"></span></a>
+      </div>
+      <div class="grid-products" id="trending">
+        {% for product in trending %}
+        <article class="pcard rv"
+          data-id="{{ product.id }}"
+          {% if forloop.counter > 4 %}style="display:none"{% endif %}>
+          <a class="pcard-media" href="{% url 'product' product.id %}" aria-label="{{ product.name }}">
+            <img class="pcard-img" src="{{ product.image_src }}" alt="{{ product.name }}" loading="lazy">
+            {% if product.hover_src %}
+            <img class="pcard-alt" src="{{ product.hover_src }}" alt="" loading="lazy" onerror="this.remove()">
+            {% endif %}
+            <div class="pcard-badges">
+              {% if product.is_new %}<span class="pbadge pb-new">New</span>{% endif %}
+              {% if product.on_sale %}<span class="pbadge pb-sale">-{{ product.discount_percent }}%</span>{% endif %}
+            </div>
+            <div class="pcard-quick">
+              <button class="qbtn" data-action="quickview" data-id="{{ product.id }}" title="Quick view" aria-label="Quick view"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
+              <button class="qbtn{% if product.id in wishlist_ids %} on{% endif %}" data-action="wish" data-url="{% url 'wishlist_toggle' product.id %}" data-id="{{ product.id }}" title="Wishlist" aria-label="Toggle wishlist"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.2S4.8 15.7 2.9 11.3A5.3 5.3 0 0 1 12 6.6a5.3 5.3 0 0 1 9.1 4.7C19.2 15.7 12 20.2 12 20.2z"/></svg></button>
+            </div>
+            {% if product.low_stock %}<span class="pstock">Only {{ product.stock }} left</span>{% endif %}
+          </a>
+          <div class="pcard-info">
+            <div class="pcard-row1">
+              <h3 class="pcard-name"><a href="{% url 'product' product.id %}">{{ product.name }}</a></h3>
+              <div class="pcard-price">
+                {% if product.on_sale %}
+                <s>${{ product.price|floatformat:"-2" }}</s><b class="sale">${{ product.display_price|floatformat:"-2" }}</b>
+                {% else %}
+                <b>${{ product.display_price|floatformat:"-2" }}</b>
+                {% endif %}
+              </div>
+            </div>
+            <div class="pcard-row2">
+              <span class="pcard-cat">{{ product.get_gender_display }} · {{ product.get_sport_display }}</span>
+              <span class="pcard-rate">
+                <span class="stars" aria-label="Rated {{ product.rating }} out of 5">
+                  <span class="stars-bg">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                  <span class="stars-fg" data-fill="{% widthratio product.rating 5 100 %}" style="width:0">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                </span>
+                <em>({{ product.reviews }})</em>
+              </span>
+            </div>
+            {% if product.has_colors %}
+            <div class="pcard-colors" role="group" aria-label="Color">
+              <p class="pcard-colors-lbl">Color</p>
+              <div class="color-row">
+                {% for c in product.color_list %}
+                <button type="button" class="color-dot" data-action="color" data-color="{{ c.name }}" data-hex="{{ c.hex }}" style="background:{{ c.hex }}" title="{{ c.name }}" aria-label="{{ c.name }}" aria-pressed="false"></button>
+                {% endfor %}
+              </div>
+              <p class="field-err" data-color-err hidden>Please choose a color.</p>
+            </div>
+            {% endif %}
+            <button class="btn btn-block pcard-add" data-action="add" data-id="{{ product.id }}" data-url="{% url 'add_to_cart' product.id %}"{% if product.stock <= 0 %} disabled{% endif %}>
+              {% if product.stock <= 0 %}Sold Out{% else %}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 8h11.6l-.9 12.2H7.1L6.2 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>Add to Cart</span>{% endif %}
+            </button>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- PROMO BANNER -->
+  <section class="section" style="padding-top:0">
+    <div class="container-wide">
+      <div class="promo rv">
+        <div class="promo-grid">
+          <div class="promo-copy">
+            <span class="overline">Mid-season event</span>
+            <h2 class="display">Up to 30% Off<br>Icons</h2>
+            <p>Selected silhouettes from the archive, repriced for a limited window. While stock lasts.</p>
+            <div class="promo-code">Use code <b>AERON10</b></div><br>
+            <a class="btn btn-light btn-lg mg" href="{{ sale_href }}">Shop the Sale</a>
+          </div>
+          <div class="promo-img"><img src="{% static 'assets/images/promo.png' %}" alt="Sale sneakers"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BEST SELLERS -->
+  <section class="section" style="padding-top:0">
+    <div class="container-wide">
+      <div class="sec-head rv">
+        <div><span class="overline">Proven favorites</span><h2 class="display">Best Sellers</h2></div>
+        <a class="link-more" href="{% url 'shop' %}">Shop all <span id="arrowBest"></span></a>
+      </div>
+      <div class="grid-products" id="bestSellers">
+        {% for product in best_sellers %}
+        <article class="pcard rv"
+          data-id="{{ product.id }}"
+          {% if forloop.counter > 4 %}style="display:none"{% endif %}>
+          <a class="pcard-media" href="{% url 'product' product.id %}" aria-label="{{ product.name }}">
+            <img class="pcard-img" src="{{ product.image_src }}" alt="{{ product.name }}" loading="lazy">
+            {% if product.hover_src %}
+            <img class="pcard-alt" src="{{ product.hover_src }}" alt="" loading="lazy" onerror="this.remove()">
+            {% endif %}
+            <div class="pcard-badges">
+              {% if product.is_new %}<span class="pbadge pb-new">New</span>{% endif %}
+              {% if product.on_sale %}<span class="pbadge pb-sale">-{{ product.discount_percent }}%</span>{% endif %}
+            </div>
+            <div class="pcard-quick">
+              <button class="qbtn" data-action="quickview" data-id="{{ product.id }}" title="Quick view" aria-label="Quick view"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
+              <button class="qbtn{% if product.id in wishlist_ids %} on{% endif %}" data-action="wish" data-url="{% url 'wishlist_toggle' product.id %}" data-id="{{ product.id }}" title="Wishlist" aria-label="Toggle wishlist"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.2S4.8 15.7 2.9 11.3A5.3 5.3 0 0 1 12 6.6a5.3 5.3 0 0 1 9.1 4.7C19.2 15.7 12 20.2 12 20.2z"/></svg></button>
+            </div>
+            {% if product.low_stock %}<span class="pstock">Only {{ product.stock }} left</span>{% endif %}
+          </a>
+          <div class="pcard-info">
+            <div class="pcard-row1">
+              <h3 class="pcard-name"><a href="{% url 'product' product.id %}">{{ product.name }}</a></h3>
+              <div class="pcard-price">
+                {% if product.on_sale %}
+                <s>${{ product.price|floatformat:"-2" }}</s><b class="sale">${{ product.display_price|floatformat:"-2" }}</b>
+                {% else %}
+                <b>${{ product.display_price|floatformat:"-2" }}</b>
+                {% endif %}
+              </div>
+            </div>
+            <div class="pcard-row2">
+              <span class="pcard-cat">{{ product.get_gender_display }} · {{ product.get_sport_display }}</span>
+              <span class="pcard-rate">
+                <span class="stars" aria-label="Rated {{ product.rating }} out of 5">
+                  <span class="stars-bg">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                  <span class="stars-fg" data-fill="{% widthratio product.rating 5 100 %}" style="width:0">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                </span>
+                <em>({{ product.reviews }})</em>
+              </span>
+            </div>
+            {% if product.has_colors %}
+            <div class="pcard-colors" role="group" aria-label="Color">
+              <p class="pcard-colors-lbl">Color</p>
+              <div class="color-row">
+                {% for c in product.color_list %}
+                <button type="button" class="color-dot" data-action="color" data-color="{{ c.name }}" data-hex="{{ c.hex }}" style="background:{{ c.hex }}" title="{{ c.name }}" aria-label="{{ c.name }}" aria-pressed="false"></button>
+                {% endfor %}
+              </div>
+              <p class="field-err" data-color-err hidden>Please choose a color.</p>
+            </div>
+            {% endif %}
+            <button class="btn btn-block pcard-add" data-action="add" data-id="{{ product.id }}" data-url="{% url 'add_to_cart' product.id %}"{% if product.stock <= 0 %} disabled{% endif %}>
+              {% if product.stock <= 0 %}Sold Out{% else %}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 8h11.6l-.9 12.2H7.1L6.2 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>Add to Cart</span>{% endif %}
+            </button>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="section news-sec">
+    <div class="container">
+      <span class="overline rv" style="color:#8b877e">The Aeron Club</span>
+      <h2 class="display rv" data-d="1">Never Miss<br>a Drop</h2>
+      <p class="rv" data-d="2">Early access to launches, member pricing and stories from the lab. One email a week — no noise.</p>
+      <form class="news-form rv" data-d="3" id="newsForm">
+        <input type="email" id="newsEmail" placeholder="Your email address" required>
+        <button class="btn btn-accent" type="submit">Subscribe</button>
+      </form>
+      <p class="news-note rv" data-d="4">By subscribing you agree to our terms. Unsubscribe anytime.</p>
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/home.js' %}"></script>{% endblock %}

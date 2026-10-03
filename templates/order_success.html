@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order Confirmed — AERON{% endblock %}
+{% block page_id %}order-success{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="success-wrap">
+      <div class="success-check" id="okIco"></div>
+      <h1 class="display">Order Confirmed</h1>
+      <p style="color:var(--mut);max-width:520px;margin:0 auto">Your order has been placed successfully. Thank you, {{ order.full_name|default:order.user.username }} — please keep {{ order.total|floatformat:"-2" }} in cash ready for delivery.</p>
+      <div class="order-no">#{{ order.id }}</div>
+
+      <div class="success-summary">
+        {% for item in items %}
+        <div class="mini-item" style="margin-bottom:10px">
+          <img src="{{ item.image_src }}" alt="{{ item.product.name }}">
+          <span><b>{{ item.product.name }}</b><br><span class="mi-meta">{% if item.color %}<span class="cr-color">{% if item.color_hex %}<i class="cr-swatch" style="background:{{ item.color_hex }}"></i>{% endif %}{{ item.color }}</span> · {% endif %}US {{ item.size|default:"One Size" }} · × {{ item.quantity }} @ ${{ item.price|floatformat:"-2" }} each</span></span>
+          <b>${{ item.line_total|floatformat:"-2" }}</b>
+        </div>
+        {% endfor %}
+
+        <div class="sum-line" style="border-top:1px solid var(--line);margin-top:10px;padding-top:12px"><span>Subtotal</span><b>${{ order.subtotal|floatformat:"-2" }}</b></div>
+        <div class="sum-line"><span>Shipping</span><b>{% if order.shipping == 0 %}FREE{% else %}${{ order.shipping|floatformat:"-2" }}{% endif %}</b></div>
+        <div class="sum-line total"><span>Total (Cash on Delivery)</span><b>${{ order.total|floatformat:"-2" }}</b></div>
+      </div>
+
+      <div class="co-block" style="text-align:left;margin:22px 0;padding:22px 26px">
+        <h3 style="margin-bottom:10px">Order details</h3>
+        <p style="font-size:13.5px;color:var(--mut);line-height:1.8">
+          Status: <b style="color:var(--ink)">{{ order.get_status_display }}</b><br>
+          Payment method: <b style="color:var(--ink)">{{ order.get_payment_method_display }}</b><br>
+          Payment status: <b style="color:var(--ink)">{{ order.get_payment_status_display }}</b><br>
+          Ship to: <b style="color:var(--ink)">{{ order.full_name }}</b>, {{ order.address }}, {{ order.city }} {% if order.postal_code %}{{ order.postal_code }}{% endif %}<br>
+          Contact: {{ order.email }} · {{ order.phone }}
+        </p>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn btn-dark btn-lg" href="{% url 'shop' %}">Continue Shopping</a>
+        <a class="btn btn-ghost btn-lg" href="{% url 'home' %}">Back to Home</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/checkout.js' %}"></script>{% endblock %}

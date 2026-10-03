@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Account — AERON{% endblock %}
+{% block page_id %}account{% endblock %}
+
+{% block content %}
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="{% url 'home' %}">Home</a> <span>/</span> <span>Account</span></p>
+    <h1 class="display" id="acctTitle">My Account</h1>
+  </div>
+
+  <div class="container-wide acct-layout">
+    <aside class="acct-nav" id="acctNav"></aside>
+    <div class="acct-panel" id="acctPanel"></div>
+  </div>
+{% endblock %}
+
+{% block pre_scripts %}<script>window.__USER = {{ user_json|safe }}; window.__CSRF = "{{ csrf_token }}";</script>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/account.js' %}"></script>{% endblock %}

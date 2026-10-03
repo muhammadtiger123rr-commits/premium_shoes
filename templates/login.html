@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign In — AERON{% endblock %}
+{% block page_id %}login{% endblock %}
+
+{% block content %}
+  <div class="auth-wrap rv in">
+    <div class="auth-side">
+      <span class="brand"><svg class="mark" viewBox="0 0 34 24"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="#ff4d1c"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg><span>AERON</span></span>
+      <h2 class="display">Welcome Back to the Club</h2>
+      <p>Track orders, save wishlists and unlock member pricing. Your stride, remembered.</p>
+      <svg class="big-mark" viewBox="0 0 34 24"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="currentColor"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg>
+    </div>
+    <div class="auth-form">
+      <h1>Sign In</h1>
+      <p class="sub">Good to see you again.</p>
+      {% for message in messages %}
+      <div class="demo-hint"><b>{{ message }}</b></div>
+      {% endfor %}
+      <form id="loginForm" method="post" action="{% url 'login' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        <div class="field{% if errors.email %} err{% endif %}"><label for="liEmail">Email</label><input type="email" id="liEmail" name="email" value="{{ values.email }}" placeholder="you@example.com" autocomplete="email"><p class="field-err"{% if not errors.email %} hidden{% endif %}>{{ errors.email|default:"" }}</p></div>
+        <div class="field{% if errors.password %} err{% endif %}"><label for="liPass">Password</label><div class="pw"><input type="password" id="liPass" name="password" placeholder="Your password" autocomplete="current-password"><button class="pw-eye" type="button" data-pw-toggle="liPass" aria-label="Show password" aria-pressed="false">{% include "partials/pw_eye.html" %}</button></div><p class="field-err"{% if not errors.password %} hidden{% endif %}>{{ errors.password|default:"" }}</p></div>
+        <div class="field" style="display:flex;align-items:center;gap:9px">
+          <input type="checkbox" id="liRemember" name="remember" checked><label for="liRemember" style="margin:0;text-transform:none;letter-spacing:0;font-size:13.5px">Keep me signed in</label>
+        </div>
+        <p class="field-err" id="liGlobal" style="margin-bottom:12px">{{ errors.global|default:"" }}</p>
+        <button class="btn btn-dark btn-lg btn-block" type="submit">Sign In</button>
+      </form>
+      <p class="auth-or">or</p>
+      {% comment %}
+        allauth's OAuth2 login view only starts the handshake on POST
+        (SOCIALACCOUNT_LOGIN_ON_GET defaults to False, so a plain GET renders
+        an intermediate page instead of redirecting). This form is therefore the
+        documented entry point, and it posts straight to allauth's own view -
+        the credentials stay server-side and nothing is hard-coded here.
+      {% endcomment %}
+      <form method="post" action="{% url 'google_login' %}">
+        {% csrf_token %}
+        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+        <button class="btn btn-ghost btn-lg btn-block btn-google" type="submit">
+          <svg class="ic" width="19" height="19" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continue with Google
+        </button>
+      </form>
+      <p class="auth-links">New to AERON? <a href="{% url 'register' %}">Create an account</a></p>
+    </div>
+  </div>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/auth.js' %}"></script>{% endblock %}

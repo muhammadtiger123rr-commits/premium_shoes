@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Checkout — AERON{% endblock %}
+{% block page_id %}checkout{% endblock %}
+
+{% block content %}
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="{% url 'home' %}">Home</a> <span>/</span> <a href="{% url 'cart' %}">Bag</a> <span>/</span> <span>Checkout</span></p>
+    <h1 class="display">Checkout</h1>
+  </div>
+
+  {% if cart_empty %}
+  <div class="container-wide" id="cartEmpty">
+    <div class="empty-state">
+      <span id="bagIcon"></span>
+      <h3>Nothing to check out</h3>
+      <p>Your bag is empty — add a pair first.</p>
+      <a class="btn btn-dark btn-lg" href="{% url 'shop' %}">Browse the Shop</a>
+      <a class="btn btn-ghost btn-lg" href="{% url 'cart' %}">Back to Bag</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="container-wide co-layout" id="coLayout">
+    <form method="post" id="checkoutForm" action="{% url 'checkout' %}" novalidate>
+      {% csrf_token %}
+
+      <div class="co-block">
+        <h3><span class="step">1</span> Contact Information</h3>
+        <div class="co-grid">
+          <div class="field" style="grid-column:1/-1"><label for="coEmail">Email address *</label>
+            <input type="email" id="coEmail" name="email" value="{{ values.email }}" placeholder="you@example.com">
+            <p class="field-err" {% if not errors.email %}hidden{% endif %}>{{ errors.email|default:"" }}</p>
+          </div>
+          <div class="field"><label for="coPhone">Phone number *</label>
+            <input type="tel" id="coPhone" name="phone" value="{{ values.phone }}" placeholder="+92 300 1234567">
+            <p class="field-err" {% if not errors.phone %}hidden{% endif %}>{{ errors.phone|default:"" }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="co-block">
+        <h3><span class="step">2</span> Shipping Address</h3>
+        <div class="field"><label for="coName">Full name *</label>
+          <input id="coName" name="full_name" value="{{ values.full_name }}" placeholder="Full name">
+          <p class="field-err" {% if not errors.full_name %}hidden{% endif %}>{{ errors.full_name|default:"" }}</p>
+        </div>
+        <div class="field"><label for="coAddr">Street address *</label>
+          <input id="coAddr" name="address" value="{{ values.address }}" placeholder="House, street, area">
+          <p class="field-err" {% if not errors.address %}hidden{% endif %}>{{ errors.address|default:"" }}</p>
+        </div>
+        <div class="co-grid">
+          <div class="field"><label for="coCity">City *</label>
+            <input id="coCity" name="city" value="{{ values.city }}" placeholder="City">
+            <p class="field-err" {% if not errors.city %}hidden{% endif %}>{{ errors.city|default:"" }}</p>
+          </div>
+          <div class="field"><label for="coPostal">Postal code *</label>
+            <input id="coPostal" name="postal_code" value="{{ values.postal_code }}" placeholder="Postal code">
+            <p class="field-err" {% if not errors.postal_code %}hidden{% endif %}>{{ errors.postal_code|default:"" }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="co-block">
+        <h3><span class="step">3</span> Payment Method</h3>
+        <label class="pay-opt on" data-pay="cod">
+          <input type="radio" name="payment_method" value="cod" checked>
+          <span class="po-body"><b>Cash on Delivery</b><span>Pay when your order arrives</span></span>
+          <span id="cashIco"></span>
+        </label>
+        <p style="font-size:12.5px;color:var(--mut);margin-top:10px">Cash on Delivery is the only payment method available.</p>
+      </div>
+
+      {% if form_error %}
+      <p class="field-err" style="margin-bottom:{% if stock_errors %}6px{% else %}14px{% endif %}">{{ form_error }}</p>
+      {% endif %}
+      {% for line in stock_errors %}
+      <p class="field-err" style="margin-bottom:14px">{{ line }}</p>
+      {% endfor %}
+
+      <button class="btn btn-accent btn-lg btn-block" type="submit" id="placeOrderBtn">Place Order</button>
+    </form>
+
+    <aside class="summary-card">
+      <h3>Your Order</h3>
+      <div class="mini-items" id="coItems">
+        {% for item in cart_items %}
+        <div class="mini-item">
+          <img src="{{ item.image_src }}" alt="{{ item.product_name }}">
+          <span><b>{{ item.product_name }}</b><br><span class="mi-meta">{% if item.color %}<span class="cr-color">{% if item.color_hex %}<i class="cr-swatch" style="background:{{ item.color_hex }}"></i>{% endif %}{{ item.color }}</span> · {% endif %}US {{ item.size|default:"One Size" }} · × {{ item.quantity }}</span></span>
+          <b>${{ item.line_total|floatformat:"-2" }}</b>
+        </div>
+        {% endfor %}
+      </div>
+      <form method="post" action="{% url 'checkout' %}" id="coPromoZone">
+        {% csrf_token %}
+        <input type="hidden" name="promo_action" value="apply">
+        <div class="promo-row">
+          <input type="text" id="coPromoInput" name="promo_code" value="{{ promo_code }}" placeholder="Promo code" autocomplete="off">
+          <button class="btn btn-dark btn-sm" type="submit" id="coPromoBtn">Apply</button>
+        </div>
+        <p class="promo-msg" id="coPromoMsg"{% if not promo_notice.0 %} hidden{% endif %}{% if promo_notice.0 == "ok" %} style="color:var(--ok)"{% elif promo_notice.0 == "err" %} style="color:var(--err)"{% endif %}>{{ promo_notice.1|default:"" }}</p>
+      </form>
+      <div class="sum-line"><span>Subtotal</span><b id="coSub">${{ subtotal|floatformat:"-2" }}</b></div>
+      <div class="sum-line"><span>Shipping</span><b id="coShip">{% if shipping == 0 %}FREE{% else %}${{ shipping|floatformat:"-2" }}{% endif %}</b></div>
+      {% if discount %}
+      <div class="sum-line discount" id="coDiscRow"><span>Discount ({{ promo_code }} — {{ promo_percent|floatformat:"-2" }}% off)</span><b id="coDisc">–${{ discount|floatformat:"-2" }}</b></div>
+      {% endif %}
+      <div class="sum-line total"><span>Total</span><b id="coTotal">${{ total|floatformat:"-2" }}</b></div>
+      <p class="sum-note"><span id="truckIcon"></span> Free standard shipping on orders over $150.</p>
+    </aside>
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/checkout.js' %}"></script>{% endblock %}

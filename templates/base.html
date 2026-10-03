@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}AERON — Engineered Footwear{% endblock %}</title>
+{% block meta_description %}{% endblock %}<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'assets/css/base.css' %}">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23121211'/%3E%3Cpath d='M6 24 L14 8h4l-8 16z' fill='%23ff4d1c'/%3E%3Cpath d='M16 24 L22 8h4l-6 16z' fill='%23fff'/%3E%3C/svg%3E">
+<script>window.__preStart = performance.now();</script>
+<script>{% block global_bootstrap %}{% endblock %}window.__CART_COUNT = {{ cart_count|default:0 }};</script>
+<script>window.__WISHLIST = {{ wishlist_ids_json|default:"[]" }}; window.__WISHLIST_COUNT = {{ wishlist_count|default:0 }}; window.__WISH_URL = "{% url 'wishlist_toggle' 999999 %}";</script>
+<script>/* The nav is built by ui.js, so it needs the real logout URL and whether
+   anybody is signed in - the offline prototype's own store cannot know that. */
+window.__AUTH = { isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }}, logoutUrl: "{% url 'logout' %}", loginUrl: "{% url 'login' %}" };</script>
+<script>/* ui.js builds the header, mobile menu, footer, product cards and search
+   results in JavaScript, so it cannot know the real paths itself. Publish them
+   here, the way __AUTH above publishes the session state. `product` and the
+   category slugs keep a placeholder id (999999) that ui.js swaps for the real
+   one, mirroring window.__WISH_URL. */
+window.__URLS = {
+  home: "{% url 'home' %}",
+  shop: "{% url 'shop' %}",
+  cart: "{% url 'cart' %}",
+  checkout: "{% url 'checkout' %}",
+  account: "{% url 'account' %}",
+  login: "{% url 'login' %}",
+  logout: "{% url 'logout' %}",
+  register: "{% url 'register' %}",
+  wishlist: "{% url 'wishlist' %}",
+  orders: "{% url 'orders' %}",
+  profile: "{% url 'profile_update' %}",
+  product: "{% url 'product' 999999 %}",
+  cats: { {% for slug, href in nav_category_urls.items %}"{{ slug }}": "{{ href }}"{% if not forloop.last %}, {% endif %}{% endfor %} }
+};</script>
+</head>
+<body data-page="{% block page_id %}{% endblock %}">
+
+<div class="preloader" id="preloader">
+  <div class="pre-brand">
+    <svg class="mark" viewBox="0 0 34 24" aria-hidden="true"><path d="M2 22 L13 2 L18 2 L9.5 22 Z" fill="currentColor"/><path d="M13 22 L21.5 2 L26.5 2 L18 22 Z" fill="#ff4d1c"/><path d="M24 22 L30 8 L33 8 L27.5 22 Z" fill="currentColor"/></svg>
+    <span style="animation-delay:.05s">A</span><span style="animation-delay:.1s">E</span><span style="animation-delay:.15s">R</span><span style="animation-delay:.2s">O</span><span style="animation-delay:.25s">N</span>
+  </div>
+  <div class="pre-bar"><i></i></div>
+</div>
+
+<div id="nav-root"></div>
+
+<main id="main">{% block content %}{% endblock %}</main>
+
+<div id="footer-root"></div>
+<div id="modal-root"></div>
+<div class="toast-stack" id="toasts"></div>
+
+{% block scripts %}{% block pre_scripts %}{% endblock %}<script src="{% static 'assets/js/db.js' %}"></script>
+<script src="{% static 'assets/js/ui.js' %}"></script>
+{% block page_scripts %}{% endblock %}{% endblock %}
+</body>
+</html>

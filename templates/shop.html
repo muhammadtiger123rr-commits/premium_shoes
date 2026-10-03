@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Shop All — AERON{% endblock %}
+{% block global_bootstrap %}window.__CSRF = "{{ csrf_token }}"; {% endblock %}
+{% block page_id %}shop{% endblock %}
+
+{% block content %}
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="{% url 'home' %}">Home</a> <span>/</span> <span>Shop</span></p>
+    <h1 class="display">All Shoes</h1>
+  </div>
+
+  <div class="container-wide shop-layout">
+    <aside class="filters" id="filters">
+      <button class="icon-btn filters-close" id="filtersClose" aria-label="Close filters"></button>
+      <div class="filter-group">
+        <h4>Search</h4>
+        <div class="field" style="margin-bottom:0"><input type="search" id="fSearch" value="{{ filters.q }}" placeholder="Search products…"></div>
+      </div>
+      <div class="filter-group">
+        <h4>Category</h4>
+        <div class="cat-links" id="fCats">
+          <a href="{% url 'shop' %}" class="on">All Products<em>{{ all_styles }}</em></a>
+          {% for c in categories %}
+          <a href="{% url 'category' c.slug %}">{{ c.name }}<em>{{ c.num_products }}</em></a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="filter-group">
+        <h4>Size (US)</h4>
+        <div class="chip-wrap" id="fSizes">
+          {% for chip in size_chips %}
+          <a class="chip{% if chip.on %} on{% endif %}" data-size="{{ chip.value }}" href="{% if chip.on %}{% querystring size=chip.drop page=None %}{% else %}{% querystring size=chip.add page=None %}{% endif %}">{{ chip.value }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="filter-group">
+        <h4>Color</h4>
+        <div class="chip-wrap" id="fColors">
+          {% for chip in color_chips %}
+          <a class="color-opt{% if chip.on %} on{% endif %}" data-color="{{ chip.value }}" href="{% if chip.on %}{% querystring color=chip.drop page=None %}{% else %}{% querystring color=chip.add page=None %}{% endif %}"><i style="background:{{ chip.hex }}"></i>{{ chip.value }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="filter-group">
+        <h4>Max price <span class="price-val" id="fPriceVal">${{ filters.price|floatformat:0 }}</span></h4>
+        <input type="range" id="fPrice" min="50" max="250" step="5" value="{{ filters.price }}">
+      </div>
+      <a class="clear-filters" id="fClear" href="{% url 'shop' %}">✕ Clear all filters</a>
+    </aside>
+
+    <div class="shop-main">
+      <div class="shop-toolbar">
+        <button class="btn btn-ghost btn-sm filters-toggle" id="filtersToggle"><span id="filterIcon"></span> Filters</button>
+        <span class="results-count" id="resultsCount">{% if total_styles %}Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ total_styles }} {% if total_styles == 1 %}style{% else %}styles{% endif %}{% else %}0 styles{% endif %}</span>
+        <select class="sort-select" id="sortSel">
+          <option value="featured"{% if filters.sort == "featured" %} selected{% endif %}>Sort: Featured</option>
+          <option value="new"{% if filters.sort == "new" %} selected{% endif %}>Sort: Newest</option>
+          <option value="rating"{% if filters.sort == "rating" %} selected{% endif %}>Sort: Top Rated</option>
+          <option value="price-asc"{% if filters.sort == "price-asc" %} selected{% endif %}>Price: Low → High</option>
+          <option value="price-desc"{% if filters.sort == "price-desc" %} selected{% endif %}>Price: High → Low</option>
+        </select>
+      </div>
+      <div class="grid-products" id="grid" data-mode="page">
+        {% if not products %}
+        <div class="empty-state" id="emptyState">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4.5 4.5"/></svg>
+          <h3>No shoes match those filters</h3>
+          <p>Try widening your search or clearing filters.</p>
+          <a class="btn btn-dark" id="emptyClear" href="{% url 'shop' %}">Clear Filters</a>
+        </div>
+        {% endif %}
+
+        {% for product in products %}
+        <article class="pcard"
+          data-id="{{ product.id }}"
+          data-search="{{ product.search_text }}"
+          data-cat="{{ product.category.slug }}"
+          data-gender="{{ product.gender }}"
+          data-sport="{{ product.sport }}"
+          data-new="{{ product.is_new|yesno:'1,0' }}"
+          data-onsale="{{ product.on_sale|yesno:'1,0' }}"
+          data-featured="{{ product.featured|yesno:'1,0' }}"
+          data-rating="{{ product.rating }}"
+          data-price="{{ product.display_price }}"
+          data-reg="{{ product.price }}"
+          data-reviews="{{ product.reviews }}"
+          data-catlabel="{{ product.get_gender_display }} · {{ product.get_sport_display }}"
+          data-desc="{{ product.description }}"
+          data-sizes="{{ product.size_csv }}"
+          data-colors="{{ product.color_csv }}">
+          <a class="pcard-media" href="{% url 'product' product.id %}" aria-label="{{ product.name }}">
+            <img class="pcard-img" src="{{ product.image_src }}" alt="{{ product.name }}" loading="lazy">
+            {% if product.hover_src %}
+            <img class="pcard-alt" src="{{ product.hover_src }}" alt="" loading="lazy" onerror="this.remove()">
+            {% endif %}
+            {% if product.stock <= 0 %}
+            <div class="pcard-badges"><span class="pbadge pb-out">Sold out</span></div>
+            {% elif product.on_sale or product.is_new %}
+            <div class="pcard-badges">
+              {% if product.is_new %}<span class="pbadge pb-new">New</span>{% endif %}
+              {% if product.on_sale %}<span class="pbadge pb-sale">-{{ product.discount_percent }}%</span>{% endif %}
+            </div>
+            {% endif %}
+            <div class="pcard-quick">
+              <button type="button" class="qbtn" data-action="quickview" data-id="{{ product.id }}" title="Quick view" aria-label="Quick view"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
+              <button type="button" class="qbtn{% if product.id in wishlist_ids %} on{% endif %}" data-action="wish" data-url="{% url 'wishlist_toggle' product.id %}" data-id="{{ product.id }}" title="Wishlist" aria-label="Toggle wishlist"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.2S4.8 15.7 2.9 11.3A5.3 5.3 0 0 1 12 6.6a5.3 5.3 0 0 1 9.1 4.7C19.2 15.7 12 20.2 12 20.2z"/></svg></button>
+            </div>
+            {% if product.low_stock %}<span class="pstock">Only {{ product.stock }} left</span>{% endif %}
+          </a>
+          <div class="pcard-info">
+            <div class="pcard-row1">
+              <h3 class="pcard-name"><a href="{% url 'product' product.id %}">{{ product.name }}</a></h3>
+              <div class="pcard-price">
+                {% if product.on_sale %}
+                <s>${{ product.price|floatformat:"-2" }}</s><b class="sale">${{ product.display_price|floatformat:"-2" }}</b>
+                {% else %}
+                <b>${{ product.display_price|floatformat:"-2" }}</b>
+                {% endif %}
+              </div>
+            </div>
+            <div class="pcard-row2">
+              <span class="pcard-cat">{{ product.get_gender_display }} · {{ product.get_sport_display }}</span>
+              <span class="pcard-rate">
+                <span class="stars" aria-label="Rated {{ product.rating }} out of 5">
+                  <span class="stars-bg">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                  <span class="stars-fg" data-fill="{% widthratio product.rating 5 100 %}" style="width:0">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                </span>
+                <em>({{ product.reviews }})</em>
+              </span>
+            </div>
+            {% if product.has_colors %}
+            <div class="pcard-colors" role="group" aria-label="Color">
+              <p class="pcard-colors-lbl">Color</p>
+              <div class="color-row">
+                {% for c in product.color_list %}
+                <button type="button" class="color-dot" data-action="color" data-color="{{ c.name }}" data-hex="{{ c.hex }}" style="background:{{ c.hex }}" title="{{ c.name }}" aria-label="{{ c.name }}" aria-pressed="false"></button>
+                {% endfor %}
+              </div>
+              <p class="field-err" data-color-err hidden>Please choose a color.</p>
+            </div>
+            {% endif %}
+            <button class="btn btn-block pcard-add" data-action="add" data-id="{{ product.id }}" data-url="{% url 'add_to_cart' product.id %}"{% if product.stock <= 0 %} disabled{% endif %}>
+              {% if product.stock <= 0 %}Sold Out{% else %}<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 8h11.6l-.9 12.2H7.1L6.2 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>Add to Cart</span>{% endif %}
+            </button>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      {% if paginator.num_pages > 1 %}
+      <nav class="pager" aria-label="Product pages">
+        {% if page_obj.has_previous %}
+        <a class="pg-arrow" href="{% querystring page=page_obj.previous_page_number %}" rel="prev">‹ Previous</a>
+        {% else %}
+        <span class="pg-arrow off" aria-disabled="true">‹ Previous</span>
+        {% endif %}
+        <div class="pg-nums">
+          {% for num in page_numbers %}
+            {% if num == page_obj.paginator.ELLIPSIS %}
+            <span class="pg-gap">…</span>
+            {% elif num == page_obj.number %}
+            <span class="pg-num on" aria-current="page">{{ num }}</span>
+            {% else %}
+            <a class="pg-num" href="{% querystring page=num %}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+        </div>
+        {% if page_obj.has_next %}
+        <a class="pg-arrow" href="{% querystring page=page_obj.next_page_number %}" rel="next">Next ›</a>
+        {% else %}
+        <span class="pg-arrow off" aria-disabled="true">Next ›</span>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/shop.js' %}"></script>{% endblock %}

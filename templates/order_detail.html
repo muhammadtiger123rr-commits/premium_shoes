@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order #{{ order.id }} — AERON{% endblock %}
+{% block page_id %}orders{% endblock %}
+
+{% block content %}
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="{% url 'home' %}">Home</a> <span>/</span> <a href="{% url 'account' %}">Account</a> <span>/</span> <a href="{% url 'orders' %}">My Orders</a> <span>/</span> <span>#{{ order.id }}</span></p>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <h1 class="display">Order #{{ order.id }}</h1>
+      <span class="status-badge {{ order.status_class }}">{{ order.get_status_display }}</span>
+      <span style="color:var(--mut);font-size:13.5px">{{ order.created_at|date:"F j, Y" }}</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="order-card open" style="margin-bottom:18px">
+      <div class="order-head" style="cursor:default">
+        <b>Items</b>
+        <span class="oh-meta">{{ items|length }} product(s)</span>
+        <span class="order-total">${{ order.total|floatformat:"-2" }}</span>
+      </div>
+      <div style="padding:0 20px 16px">
+        {% for item in items %}
+        <div class="mini-item" style="margin-bottom:10px">
+          <img src="{{ item.image_src }}" alt="{{ item.product.name }}">
+          <span>
+            <b>{{ item.product.name }}</b><br>
+            <span class="mi-meta">{% if item.color %}<span class="cr-color">{% if item.color_hex %}<i class="cr-swatch" style="background:{{ item.color_hex }}"></i>{% endif %}{{ item.color }}</span> · {% endif %}US {{ item.size|default:"One Size" }} · × {{ item.quantity }} @ ${{ item.price|floatformat:"-2" }} each</span>
+          </span>
+          <b>${{ item.line_total|floatformat:"-2" }}</b>
+        </div>
+        {% empty %}
+        <p style="color:var(--mut);font-size:13.5px">This order has no items.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="co-block" style="margin-bottom:18px">
+      <h3>Customer details</h3>
+      <p style="font-size:13.5px;color:var(--mut);line-height:1.9">
+        Name: <b style="color:var(--ink)">{{ order.full_name }}</b><br>
+        Email: <b style="color:var(--ink)">{{ order.email }}</b><br>
+        Phone: <b style="color:var(--ink)">{{ order.phone|default:"—" }}</b><br>
+        Address: <b style="color:var(--ink)">{{ order.address }}, {{ order.city }}{% if order.postal_code %} {{ order.postal_code }}{% endif %}</b><br>
+        Payment: <b style="color:var(--ink)">{{ order.get_payment_method_display }}</b> · {{ order.get_payment_status_display }}<br>
+        Placed: <b style="color:var(--ink)">{{ order.created_at|date:"M j, Y, g:i a" }}</b>
+      </p>
+    </div>
+
+    <div class="co-block">
+      <h3>Order totals</h3>
+      <div class="sum-line"><span>Subtotal</span><b>${{ order.subtotal|floatformat:"-2" }}</b></div>
+      <div class="sum-line"><span>Shipping</span><b>{% if order.shipping == 0 %}FREE{% else %}${{ order.shipping|floatformat:"-2" }}{% endif %}</b></div>
+      <div class="sum-line total"><span>Total</span><b>${{ order.total|floatformat:"-2" }}</b></div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap;margin-top:22px">
+      <a class="btn btn-dark" href="{% url 'orders' %}">Back to My Orders</a>
+      <a class="btn btn-ghost" href="{% url 'shop' %}">Continue Shopping</a>
+    </div>
+  </div>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/orders.js' %}"></script>{% endblock %}

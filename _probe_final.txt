@@ -1,0 +1,356 @@
+
+======= shop.html ALL <form/type/button/qbtn/a data =======
+  31|     <p class="crumbs"><a href="index.html">Home</a> <span>/</span> <span>Shop</span></p>
+  37|       <button class="icon-btn filters-close" id="filtersClose" aria-label="Close filters"></button>
+  40|         <div class="field" style="margin-bottom:0"><input type="search" id="fSearch" placeholder="Search products…"></div>
+  45|           <a href="{% url 'shop' %}" class="on">All Products<em>{{ products|length }}</em></a>
+  47|           <a href="{% url 'category' c.slug %}">{{ c.name }}<em>{{ c.num_products }}</em></a>
+  61|         <input type="range" id="fPrice" min="50" max="250" step="5">
+  63|       <button class="clear-filters" id="fClear">✕ Clear all filters</button>
+  68|         <button class="btn btn-ghost btn-sm filters-toggle" id="filtersToggle"><span id="filterIcon"></span> Filters</button>
+  83|           <button class="btn btn-dark" id="emptyClear">Clear Filters</button>
+  87|         <article class="pcard"
+ 101|           <a class="pcard-media" href="{% url 'product' product.id %}" aria-label="{{ product.name }}">
+ 102|             <img class="pcard-img" src="{{ product.image_src }}" alt="{{ product.name }}" loading="lazy">
+ 104|             <img class="pcard-alt" src="{{ product.hover_src }}" alt="" loading="lazy" onerror="this.remove()">
+ 107|             <div class="pcard-badges"><span class="pbadge pb-out">Sold out</span></div>
+ 109|             <div class="pcard-badges">
+ 114|             <div class="pcard-quick">
+ 115|               <button class="qbtn" data-action="quickview" data-id="{{ product.id }}" title="Quick view" aria-label="Quick view"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" st
+ 116|               <button class="qbtn{% if product.id in wishlist_ids %} on{% endif %}" data-action="wish" data-url="{% url 'wishlist_toggle' product.id %}" data-id="{{ product.id }}" title="Wishlist" aria-label="Toggle wish
+ 120|           <div class="pcard-info">
+ 121|             <div class="pcard-row1">
+ 122|               <h3 class="pcard-name"><a href="{% url 'product' product.id %}">{{ product.name }}</a></h3>
+ 123|               <div class="pcard-price">
+ 131|             <div class="pcard-row2">
+ 132|               <span class="pcard-cat">{{ product.get_gender_display }} · {{ product.get_sport_display }}</span>
+ 133|               <span class="pcard-rate">
+ 141|             <button class="btn btn-block pcard-add" data-action="add" data-id="{{ product.id }}" data-url="{% url 'add_to_cart' product.id %}"{% if product.stock <= 0 %} disabled{% endif %}>
+ 148|       <div class="load-wrap" id="loadWrap"><button class="btn btn-dark mg" id="loadMore">Load More</button></div>
+
+======= shop.js FULL =======
+   1| /* AERON — Shop page (Django version)
+   2|    Product cards are rendered by Django from the database.
+   3|    This script keeps the original search/filter/sort/load-more working by
+   4|    showing and hiding those server-rendered cards. */
+   5| (function () {
+   6|   'use strict';
+   7| 
+   8|   var params = new URLSearchParams(location.search);
+   9|   var CAT = params.get('cat') || '';
+  10|   var PAGE_SIZE = 8;
+  11| 
+  12|   var state = {
+  13|     q: params.get('q') || '',
+  14|     sizes: [],
+  15|     colors: [],
+  16|     priceMax: 250,
+  17|     sort: 'featured',
+  18|     visible: PAGE_SIZE
+  19|   };
+  20| 
+  21|   UI.mountChrome(
+  22|     CAT === 'sale' ? 'sale' :
+  23|     ['men', 'women', 'kids', 'running'].indexOf(CAT) !== -1 ? CAT : 'shop'
+  24|   );
+  25| 
+  26|   var fi = document.getElementById('filterIcon');
+  27|   if (fi) fi.innerHTML = UI.icon('filter');
+  28|   var fc = document.getElementById('filtersClose');
+  29|   if (fc) fc.innerHTML = UI.icon('x');
+  30| 
+  31|   var grid = document.getElementById('grid');
+  32|   var loadWrap = document.getElementById('loadWrap');
+  33|   var emptyState = document.getElementById('emptyState');
+  34| 
+  35|   function allCards() {
+  36|     return Array.prototype.slice.call(grid.querySelectorAll('.pcard'));
+  37|   }
+  38| 
+  39|   /* Read the data-* attributes Django wrote on each card. */
+  40|   function info(card) {
+  41|     var d = card.dataset;
+  42|     var colors = [];
+  43|     (d.colors || '').split(',').filter(Boolean).forEach(function (pair) {
+  44|       var i = pair.indexOf(':');
+  45|       colors.push(i === -1 ? { fam: pair, hex: '' } : { fam: pair.slice(0, i), hex: pair.slice(i + 1) });
+  46|     });
+  47|     return {
+  48|       q: (d.search || '').toLowerCase(),
+  49|       cat: d.cat || '',
+  50|       gender: d.gender || '',
+  51|       sport: d.sport || '',
+  52|       isNew: d.new === '1',
+  53|       onSale: d.onsale === '1',
+  54|       featured: d.featured === '1',
+  55|       rating: parseFloat(d.rating || 0),
+  56|       price: parseFloat(d.price || 0),
+  57|       sizes: (d.sizes || '').split(',').filter(Boolean),
+  58|       colors: colors
+  59|     };
+  60|   }
+  61| 
+  62|   function matchCategory(d, slug) {
+  63|     if (slug === 'new-arrivals') return d.isNew;
+  64|     if (slug === 'sale') return d.onSale;
+  65|     return d.gender === slug || d.sport === slug;
+  66|   }
+  67| 
+  68|   function pool() {
+  69|     var all = allCards();
+  70|     return CAT ? all.filter(function (c) { return matchCategory(info(c), CAT); }) : all;
+  71|   }
+  72| 
+  73|   function filtered() {
+  74|     var list = pool();
+  75|     var q = state.q.toLowerCase();
+  76|     if (q) {
+  77|       list = list.filter(function (c) { return info(c).q.indexOf(q) !== -1; });
+  78|     }
+  79|     if (state.sizes.length) {
+  80|       list = list.filter(function (c) {
+  81|         var sizes = info(c).sizes;
+  82|         return state.sizes.some(function (s) { return sizes.indexOf(s) !== -1; });
+  83|       });
+  84|     }
+  85|     if (state.colors.length) {
+  86|       list = list.filter(function (c) {
+  87|         return info(c).colors.some(function (col) { return state.colors.indexOf(col.fam) !== -1; });
+  88|       });
+  89|     }
+  90|     list = list.filter(function (c) { return info(c).price <= state.priceMax; });
+  91| 
+  92|     switch (state.sort) {
+  93|       case 'price-asc': list.sort(function (a, b) { return info(a).price - info(b).price; }); break;
+  94|       case 'price-desc': list.sort(function (a, b) { return info(b).price - info(a).price; }); break;
+  95|       case 'rating': list.sort(function (a, b) { return info(b).rating - info(a).rating; }); break;
+  96|       case 'new': list.sort(function (a, b) {
+  97|         var na = info(a).isNew ? 1 : 0, nb = info(b).isNew ? 1 : 0;
+  98|         return (nb - na) || (Number(b.dataset.id) - Number(a.dataset.id));
+  99|       }); break;
+ 100|       default: list.sort(function (a, b) {
+ 101|         var fa = info(a).featured ? 1 : 0, fb = info(b).featured ? 1 : 0;
+ 102|         return (fb - fa) || (info(b).rating - info(a).rating);
+ 103|       });
+ 104|     }
+ 105|     return list;
+ 106|   }
+ 107| 
+ 108|   /* ---------------- render ---------------- */
+ 109|   function render() {
+ 110|     var list = filtered();
+ 111|     var shown = list.slice(0, state.visible);
+ 112| 
+ 113|     allCards().forEach(function (c) { c.style.display = 'none'; });
+ 114|     shown.forEach(function (c) { c.style.display = ''; });
+ 115| 
+ 116|     /* keep the DOM in the filtered/sorted order so "Load More" reveals the next cards */
+ 117|     if (list.length) {
+ 118|       var frag = document.createDocumentFragment();
+ 119|       list.forEach(function (c) { frag.appendChild(c); });
+ 120|       grid.appendChild(frag);
+ 121|     }
+ 122| 
+ 123|     if (emptyState) emptyState.style.display = shown.length ? 'none' : '';
+ 124| 
+ 125|     document.getElementById('resultsCount').textContent =
+ 126|       'Showing ' + shown.length + ' of ' + list.length + ' ' + (list.length === 1 ? 'style' : 'styles');
+ 127|     loadWrap.style.display = shown.length < list.length ? '' : 'none';
+ 128|     document.getElementById('loadMore').textContent = 'Load More (' + (list.length - shown.length) + ' more)';
+ 129|     syncURL();
+ 130|     UI_reveal(grid);
+ 131|   }
+ 132| 
+ 133|   function syncURL() {
+ 134|     try {
+ 135|       var p = new URLSearchParams();
+ 136|       if (CAT) p.set('cat', CAT);
+ 137|       if (state.q) p.set('q', state.q);
+ 138|       var qs = p.toString();
+ 139|       history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+ 140|     } catch (e) { /* safe to ignore */ }
+ 141|   }
+ 142| 
+ 143|   /* ---------------- filter UI ---------------- */
+ 144|   function buildFilters() {
+ 145|     var cards = pool();
+ 146| 
+ 147|     /* sizes */
+ 148|     var sizeSet = {};
+ 149|     cards.forEach(function (c) { info(c).sizes.forEach(function (s) { sizeSet[s] = 1; }); });
+ 150|     var sizes = Object.keys(sizeSet).sort(function (a, b) {
+ 151|       var ay = a.indexOf('Y') !== -1, by = b.indexOf('Y') !== -1;
+ 152|       if (ay !== by) return ay ? 1 : -1;
+ 153|       return parseFloat(a) - parseFloat(b);
+ 154|     });
+ 155|     document.getElementById('fSizes').innerHTML = sizes.map(function (s) {
+ 156|       return '<button class="chip" data-size="' + s + '">' + s + '</button>';
+ 157|     }).join('');
+ 158| 
+ 159|     /* colors */
+ 160|     var fams = {};
+ 161|     cards.forEach(function (c) {
+ 162|       info(c).colors.forEach(function (col) { if (col.fam && !fams[col.fam]) fams[col.fam] = col.hex; });
+ 163|     });
+ 164|     document.getElementById('fColors').innerHTML = Object.keys(fams).map(function (f) {
+ 165|       return '<button class="color-opt" data-color="' + f + '"><i style="background:' + fams[f] + '"></i>' + f + '</button>';
+ 166|     }).join('');
+ 167| 
+ 168|     document.getElementById('fPriceVal').textContent = Store.money(state.priceMax);
+ 169|     document.getElementById('fSearch').value = state.q;
+ 170|   }
+ 171| 
+ 172|   /* events */
+ 173|   var searchT;
+ 174|   document.getElementById('fSearch').addEventListener('input', function (e) {
+ 175|     clearTimeout(searchT);
+ 176|     searchT = setTimeout(function () {
+ 177|       state.q = e.target.value.trim(); state.visible = PAGE_SIZE; render();
+ 178|     }, 220);
+ 179|   });
+ 180| 
+ 181|   document.getElementById('fSizes').addEventListener('click', function (e) {
+ 182|     var chip = e.target.closest('[data-size]');
+ 183|     if (!chip) return;
+ 184|     chip.classList.toggle('on');
+ 185|     var s = chip.dataset.size;
+ 186|     var i = state.sizes.indexOf(s);
+ 187|     if (i === -1) state.sizes.push(s); else state.sizes.splice(i, 1);
+ 188|     state.visible = PAGE_SIZE; render();
+ 189|   });
+ 190| 
+ 191|   document.getElementById('fColors').addEventListener('click', function (e) {
+ 192|     var opt = e.target.closest('[data-color]');
+ 193|     if (!opt) return;
+ 194|     opt.classList.toggle('on');
+ 195|     var c = opt.dataset.color;
+ 196|     var i = state.colors.indexOf(c);
+ 197|     if (i === -1) state.colors.push(c); else state.colors.splice(i, 1);
+ 198|     state.visible = PAGE_SIZE; render();
+ 199|   });
+ 200| 
+ 201|   document.getElementById('fPrice').addEventListener('input', function (e) {
+ 202|     state.priceMax = parseInt(e.target.value, 10);
+ 203|     document.getElementById('fPriceVal').textContent = 'Up to ' + Store.money(state.priceMax);
+ 204|     state.visible = PAGE_SIZE; render();
+ 205|   });
+ 206| 
+ 207|   document.getElementById('sortSel').addEventListener('change', function (e) {
+ 208|     state.sort = e.target.value; render();
+ 209|   });
+ 210| 
+ 211|   document.getElementById('loadMore').addEventListener('click', function () {
+ 212|     state.visible += PAGE_SIZE; render();
+ 213|   });
+ 214| 
+ 215|   function clearAll() {
+ 216|     state.q = ''; state.sizes = []; state.colors = []; state.priceMax = 250; state.visible = PAGE_SIZE;
+ 217|     document.getElementById('fPrice').value = 250;
+ 218|     document.querySelectorAll('#fSizes .chip, #fColors .color-opt').forEach(function (c) { c.classList.remove('on'); });
+ 219|     document.getElementById('fPriceVal').textContent = Store.money(250);
+ 220|     document.getElementById('fSearch').value = '';
+ 221|     render();
+ 222|   }
+ 223|   document.getElementById('fClear').addEventListener('click', clearAll);
+ 224|   var ec = document.getElementById('emptyClear');
+ 225|   if (ec) ec.addEventListener('click', clearAll);
+ 226| 
+ 227|   /* mobile filter drawer */
+ 228|   var ft = document.getElementById('filtersToggle');
+ 229|   if (ft) ft.addEventListener('click', function () { document.body.classList.add('filters-open'); });
+ 230|   var fx = document.getElementById('filtersClose');
+ 231|   if (fx) fx.addEventListener('click', function () { document.body.classList.remove('filters-open'); });
+ 232| 
+ 233|   /* star rating fill widths — applied here so the inline style attribute stays valid CSS */
+ 234|   document.querySelectorAll('.stars-fg').forEach(function (el) {
+ 235|     el.style.width = (el.dataset.fill || '0') + '%';
+ 236|   });
+ 237| 
+ 238|   buildFilters();
+ 239|   render();
+ 240| })();
+
+======= ui.js cards+handler =======
+ 198|   function cardHTML(p, animate) {
+ 212|     '<article class="pcard' + (animate === false ? '' : ' rv') + '" data-id="' + p.id + '">' +
+ 217|           '<button class="qbtn" data-action="quickview" data-id="' + p.id + '" title="Quick view" aria-label="Quick view">' + icon('eye') + '</button>' +
+ 218|           '<button class="qbtn' + (wished ? ' on' : '') + '" data-action="wish" data-id="' + p.id + '"' + (wurl ? ' data-url="' + wurl + '"' : '') + ' title="Wishlist" aria-label="Toggle wishlist">' + icon('heart') + '</
+ 231|         '<button class="btn btn-block pcard-add" data-action="add" data-id="' + p.id + '"' + (soldout ? ' disabled' : '') + '>' +
+ 308|      was a redirect (logged out -> the view kicked us to /login/). */
+ 329|         window.location.href = res.url;
+ 350|   function cardAdd(pid, btn) {
+ 351|     var url = btn.getAttribute('data-url');
+ 368|   function findWishURL(pid, btn) {
+ 369|     var url = btn ? btn.getAttribute('data-url') : '';
+ 380|     document.querySelectorAll('[data-action="wish"][data-id="' + pid + '"]').forEach(function (el) {
+ 392|   function toggleWish(pid, btn) {
+ 394|     /* No database endpoint around -> offline frontend, keep the old
+ 412|       /* Logged out -> the view redirects to /login/; follow it so the user
+ 414|       if (res.redirected) { window.location.href = res.url; return null; }
+ 431|           if (!document.querySelector('.wish-row')) window.location.reload();
+ 440|   function quickView(pid) {
+ 593|       if (a.hasAttribute('data-demo')) { e.preventDefault(); toast('Demo link \u2014 this is a concept storefront.', 'info'); return; }
+ 630|       var el = e.target.closest('[data-action]');
+ 637|       if (act === 'add') { e.preventDefault(); cardAdd(id, el); }
+ 638|       else if (act === 'wish') { e.preventDefault(); toggleWish(id, el); }
+ 639|       else if (act === 'quickview') { e.preventDefault(); quickView(id); }
+
+======= shop.html lines 78-135 raw =======
+  78|       <div class="grid-products" id="grid">
+  79|         <div class="empty-state" id="emptyState" style="grid-column:1/-1; display:none">
+  80|           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4.5 
+  81|           <h3>No shoes match those filters</h3>
+  82|           <p>Try widening your search or clearing filters.</p>
+  83|           <button class="btn btn-dark" id="emptyClear">Clear Filters</button>
+  84|         </div>
+  85| 
+  86|         {% for product in products %}
+  87|         <article class="pcard"
+  88|           data-id="{{ product.id }}"
+  89|           data-search="{{ product.search_text }}"
+  90|           data-cat="{{ product.category.slug }}"
+  91|           data-gender="{{ product.gender }}"
+  92|           data-sport="{{ product.sport }}"
+  93|           data-new="{{ product.is_new|yesno:'1,0' }}"
+  94|           data-onsale="{{ product.on_sale|yesno:'1,0' }}"
+  95|           data-featured="{{ product.featured|yesno:'1,0' }}"
+  96|           data-rating="{{ product.rating }}"
+  97|           data-price="{{ product.display_price }}"
+  98|           data-sizes="{{ product.size_csv }}"
+  99|           data-colors="{{ product.color_csv }}"
+ 100|           {% if forloop.counter > 8 %}style="display:none"{% endif %}>
+ 101|           <a class="pcard-media" href="{% url 'product' product.id %}" aria-label="{{ product.name }}">
+ 102|             <img class="pcard-img" src="{{ product.image_src }}" alt="{{ product.name }}" loading="lazy">
+ 103|             {% if product.hover_src %}
+ 104|             <img class="pcard-alt" src="{{ product.hover_src }}" alt="" loading="lazy" onerror="this.remove()">
+ 105|             {% endif %}
+ 106|             {% if product.stock <= 0 %}
+ 107|             <div class="pcard-badges"><span class="pbadge pb-out">Sold out</span></div>
+ 108|             {% elif product.on_sale or product.is_new %}
+ 109|             <div class="pcard-badges">
+ 110|               {% if product.is_new %}<span class="pbadge pb-new">New</span>{% endif %}
+ 111|               {% if product.on_sale %}<span class="pbadge pb-sale">-{{ product.discount_percent }}%</span>{% endif %}
+ 112|             </div>
+ 113|             {% endif %}
+ 114|             <div class="pcard-quick">
+ 115|               <button class="qbtn" data-action="quickview" data-id="{{ product.id }}" title="Quick view" aria-label="Quick view"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" st
+ 116|               <button class="qbtn{% if product.id in wishlist_ids %} on{% endif %}" data-action="wish" data-url="{% url 'wishlist_toggle' product.id %}" data-id="{{ product.id }}" title="Wishlist" aria-label="Toggle wish
+ 117|             </div>
+ 118|             {% if product.low_stock %}<span class="pstock">Only {{ product.stock }} left</span>{% endif %}
+ 119|           </a>
+ 120|           <div class="pcard-info">
+ 121|             <div class="pcard-row1">
+ 122|               <h3 class="pcard-name"><a href="{% url 'product' product.id %}">{{ product.name }}</a></h3>
+ 123|               <div class="pcard-price">
+ 124|                 {% if product.on_sale %}
+ 125|                 <s>${{ product.price|floatformat:"-2" }}</s><b class="sale">${{ product.display_price|floatformat:"-2" }}</b>
+ 126|                 {% else %}
+ 127|                 <b>${{ product.display_price|floatformat:"-2" }}</b>
+ 128|                 {% endif %}
+ 129|               </div>
+ 130|             </div>
+ 131|             <div class="pcard-row2">
+ 132|               <span class="pcard-cat">{{ product.get_gender_display }} · {{ product.get_sport_display }}</span>
+ 133|               <span class="pcard-rate">
+ 134|                 <span class="stars" aria-label="Rated {{ product.rating }} out of 5">
+ 135|                   <span class="stars-bg">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.

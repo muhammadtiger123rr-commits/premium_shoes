@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Your Bag — AERON{% endblock %}
+{% block page_id %}cart{% endblock %}
+
+{% block content %}
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="{% url 'home' %}">Home</a> <span>/</span> <span>Bag</span></p>
+    <h1 class="display">Your Bag</h1>
+  </div>
+
+  {% if cart_items %}
+  <div class="container-wide cart-layout" id="cartLayout">
+    <div>
+      <div class="cart-items" id="cartItems">
+        {% for item in cart_items %}
+        <div class="cart-row" data-id="{{ item.id }}">
+          <a href="{{ item.product_url }}" aria-label="{{ item.product_name }}">
+            <img src="{{ item.image_src }}" alt="{{ item.product_name }}">
+          </a>
+          <div>
+            <a class="cr-name" href="{{ item.product_url }}">{{ item.product_name }}</a>
+            <p class="cr-variant">{% if item.color %}<span class="cr-color">{% if item.color_hex %}<i class="cr-swatch" style="background:{{ item.color_hex }}"></i>{% endif %}{{ item.color }}</span> &middot; {% endif %}US {{ item.size|default:"One Size" }} &middot; ${{ item.unit_price|floatformat:"-2" }} each</p>
+            <div class="cr-ctrl">
+              <div class="qty-stepper">
+                <form method="post" action="{% url 'cart_update' item.id %}">
+                  {% csrf_token %}
+                  <button type="submit" name="action" value="dec" aria-label="Decrease"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+                </form>
+                <b class="cqty">{{ item.quantity }}</b>
+                <form method="post" action="{% url 'cart_update' item.id %}">
+                  {% csrf_token %}
+                  <button type="submit" name="action" value="inc" aria-label="Increase"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="cr-right">
+            <span class="cr-price">${{ item.line_total|floatformat:"-2" }}</span>
+            <form method="post" action="{% url 'cart_remove' item.id %}">
+              {% csrf_token %}
+              <button type="submit" class="cr-remove" aria-label="Remove" title="Remove"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.8 13h9.4l.8-13M10 11v5M14 11v5"/></svg> Remove</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div style="margin-top:26px;display:flex;gap:14px;flex-wrap:wrap">
+        <a class="btn btn-ghost" href="{% url 'shop' %}">← Continue Shopping</a>
+        <form method="post" action="{% url 'cart_clear' %}">
+          {% csrf_token %}
+          <button class="btn btn-sm" id="clearCart" style="color:var(--mut);font-weight:600">Clear bag</button>
+        </form>
+      </div>
+    </div>
+
+    <aside class="summary-card" id="summaryCard">
+      <h3>Order Summary</h3>
+      <div class="sum-line"><span>Subtotal</span><b id="sumSub">${{ subtotal|floatformat:"-2" }}</b></div>
+      <div class="sum-line"><span>Shipping</span><b id="sumShip">{% if shipping == 0 %}FREE{% else %}${{ shipping|floatformat:"-2" }}{% endif %}</b></div>
+      <div class="sum-line total"><span>Total</span><b id="sumTotal">${{ total|floatformat:"-2" }}</b></div>
+      <div id="promoZone">
+        <div class="promo-row">
+          <input type="text" id="promoInput" placeholder="Promo code">
+          <button class="btn btn-dark btn-sm" id="promoBtn">Apply</button>
+        </div>
+        <p class="promo-msg" id="promoMsg"></p>
+      </div>
+      <a class="btn btn-accent btn-lg btn-block" id="checkoutBtn" href="{% url 'checkout' %}">Proceed to Checkout</a>
+      <p class="sum-note"><span id="truckIcon"></span> Free standard shipping on orders over $150.</p>
+    </aside>
+  </div>
+  {% else %}
+  <div class="container-wide" id="cartEmpty">
+    <div class="empty-state">
+      <span id="bagIcon"></span>
+      <h3>Your bag is empty</h3>
+      <p>Looks like you haven’t added anything yet. Let’s fix that.</p>
+      <a class="btn btn-dark btn-lg" href="{% url 'shop' %}">Start Shopping</a>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/cart.js' %}"></script>{% endblock %}

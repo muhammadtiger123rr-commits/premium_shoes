@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Wishlist — AERON{% endblock %}
+{% block global_bootstrap %}window.__CSRF = "{{ csrf_token }}"; {% endblock %}
+{% block page_id %}wishlist{% endblock %}
+
+{% block content %}
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="{% url 'home' %}">Home</a> <span>/</span> <a href="{% url 'account' %}">Account</a> <span>/</span> <span>Wishlist</span></p>
+    <h1 class="display">Wishlist</h1>
+  </div>
+
+  <div class="container-wide">
+    {% if products %}
+      <div class="co-block" style="text-align:left;padding:clamp(16px,2.5vw,26px)">
+        {% for wp in products %}
+        <div class="wish-row" data-id="{{ wp.id }}" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 0;border-bottom:1px solid var(--line)">
+          <a href="{{ wp.product_url }}" style="display:inline-flex"><img src="{{ wp.image_src }}" alt="{{ wp.name }}" style="width:56px;height:56px;object-fit:contain;background:var(--bg-2);border-radius:10px;padding:5px"></a>
+          <a href="{{ wp.product_url }}" style="flex:1;min-width:150px"><b style="font-size:14.5px">{{ wp.name }}</b></a>
+          <span style="display:inline-flex;align-items:center;gap:8px;min-width:120px">
+            {% if wp.sale_price %}
+              <s style="color:var(--mut)">${{ wp.price|floatformat:"-2" }}</s><b class="sale">${{ wp.sale_price|floatformat:"-2" }}</b>
+            {% else %}
+              <b>${{ wp.price|floatformat:"-2" }}</b>
+            {% endif %}
+          </span>
+          <button class="btn btn-ghost btn-sm" data-action="wish" data-url="{% url 'wishlist_toggle' wp.id %}" data-id="{{ wp.id }}">Remove</button>
+        </div>
+        {% endfor %}
+        <p style="text-align:right;margin:18px 0 4px"><a class="btn btn-dark" href="{% url 'shop' %}">Continue Shopping</a></p>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>Your wishlist is empty</h3>
+        <p>Tap the heart on any product to save it here.</p>
+        <a class="btn btn-dark" href="{% url 'shop' %}">Start Shopping</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/wishlist.js' %}"></script>{% endblock %}

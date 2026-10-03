@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} — AERON{% endblock %}
+{% block global_bootstrap %}window.__ADD_URL = "{% url 'add_to_cart' product.id %}"; window.__CSRF = "{{ csrf_token }}"; {% endblock %}
+{% block page_id %}product{% endblock %}
+
+{% block content %}
+  <div id="productRoot" data-pid="{{ product.id }}" data-name="{{ product.name }}" data-stock="{{ product.stock }}">
+    <div class="container-wide" style="padding-top:22px"><p class="crumbs" style="font-size:12.5px;color:var(--mut)">
+      <a href="{% url 'home' %}">Home</a> <span>/</span> <a href="{% url 'shop' %}">Shop</a> <span>/</span> <span>{{ product.name }}</span></p></div>
+
+    <div class="container-wide pd-layout">
+      <div class="pd-gallery">
+        <div class="pd-main" id="pdMain"><img id="pdImg" src="{{ product.image_src }}" alt="{{ product.name }}"></div>
+        <div class="pd-thumbs" id="pdThumbs">
+          <button class="pd-thumb on" data-i="0"><img src="{{ product.image_src }}" alt="View 1"></button>
+          {% if product.hover_src %}
+          <button class="pd-thumb" data-i="1"><img src="{{ product.hover_src }}" alt="View 2"></button>
+          {% endif %}
+          <button class="pd-thumb" data-i="zoom"><img src="{{ product.image_src }}" style="transform:scale(1.9);transform-origin:60% 55%" alt="Close-up"></button>
+        </div>
+      </div>
+
+      <div class="pd-info">
+        <p class="overline">{{ product.get_gender_display }} · {{ product.get_sport_display }}{% if product.is_new %} · New Arrival{% endif %}</p>
+        <h1 class="display">{{ product.name }}</h1>
+        <div class="pd-rate">
+          <span class="stars" aria-label="Rated {{ product.rating }} out of 5">
+            <span class="stars-bg">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+            <span class="stars-fg" style="width:{% widthratio product.rating 5 100 %}%">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+          </span>
+          <em>{{ product.rating|floatformat:1 }} · {{ product.reviews }} reviews</em>
+        </div>
+        <div class="pd-price">
+          {% if product.on_sale %}
+          <s>${{ product.price|floatformat:"-2" }}</s> <b>${{ product.display_price|floatformat:"-2" }}</b>
+          <span class="save-tag">Save {{ product.discount_percent }}%</span>
+          {% else %}
+          <b>${{ product.display_price|floatformat:"-2" }}</b>
+          {% endif %}
+        </div>
+        <p class="pd-stock{% if not product.in_stock %} out{% endif %}" id="pdStock">{% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}</p>
+        <p class="pd-desc">{{ product.description }}</p>
+
+        {% if product.has_colors %}
+        <div class="pd-sec" id="colorSec">
+          <p class="lbl" id="colorLbl">Color <span id="colorLabel">{{ product.first_color }}</span></p>
+          <div class="color-row" id="colorRow" role="group" aria-labelledby="colorLbl">
+            {% for c in product.color_list %}
+            <button type="button" class="color-choice{% if c.selected %} on{% endif %}"
+                    data-color="{{ c.name }}" data-hex="{{ c.hex }}" data-i="{{ forloop.counter0 }}"
+                    aria-pressed="{% if c.selected %}true{% else %}false{% endif %}">
+              <i class="color-dot" style="background:{{ c.hex }}"></i><span class="color-name">{{ c.name }}</span>
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="pd-sec"><p class="lbl">Select size (US) <span><a href="#" data-demo style="color:var(--mut);text-decoration:underline">Size guide</a></span></p>
+          {% if product.stock <= 0 %}
+          <p class="stock-note">This style is currently sold out.</p>
+          {% else %}
+          <div class="size-row" id="sizeRow">
+            {% for s in product.sizes %}
+            <button class="size-chip" data-size="{{ s }}">{{ s }}</button>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <p class="field-err" id="sizeErr" hidden>Please choose a size first.</p>
+        </div>
+
+        {% if product.stock > 0 %}
+        <div class="qty-row">
+          <div class="qty-stepper"><button id="qtyMinus" aria-label="Decrease"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><b id="qtyVal">1</b>
+            <button id="qtyPlus" aria-label="Increase"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
+          {% if product.low_stock %}<span class="stock-note">Only {{ product.stock }} left in stock</span>{% endif %}
+        </div>
+        {% endif %}
+
+        <div class="pd-ctas">
+          {% if product.stock <= 0 %}
+          <button class="btn btn-dark btn-lg" disabled>Sold Out</button>
+          {% else %}
+          <button class="btn btn-dark btn-lg" id="addBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.2 8h11.6l-.9 12.2H7.1L6.2 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span>Add to Cart</span></button>
+          <button class="btn btn-accent btn-lg" id="buyBtn">Buy Now</button>
+          {% endif %}
+          <button class="icon-btn{% if product.id in wishlist_ids %} on{% endif %}" id="wishBtn" data-action="wish" data-url="{% url 'wishlist_toggle' product.id %}" data-id="{{ product.id }}" aria-label="Wishlist"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.2S4.8 15.7 2.9 11.3A5.3 5.3 0 0 1 12 6.6a5.3 5.3 0 0 1 9.1 4.7C19.2 15.7 12 20.2 12 20.2z"/></svg></button>
+        </div>
+
+        <div class="pd-perks">
+          <div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h12v10H2zM14 10h4l3 3v3h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg> Free standard shipping over $150 · arrives in 3–5 days</div>
+          <div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.2"/><path d="M3.5 3.5v4.7h4.7"/></svg> 30-day free returns, no questions asked</div>
+          <div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5s7.5-3.4 7.5-9.6V5.4L12 2.6 4.5 5.4v6.5c0 6.2 7.5 9.6 7.5 9.6z"/></svg> 2-year craftsmanship warranty</div>
+        </div>
+
+        <div class="tabs">
+          <div class="tab-row">
+            <button class="tab-btn on" data-tab="desc">Description</button>
+            <button class="tab-btn" data-tab="specs">Specifications</button>
+            <button class="tab-btn" data-tab="ship">Shipping &amp; Returns</button>
+            <button class="tab-btn" data-tab="rev">Reviews ({{ product.reviews }})</button>
+          </div>
+          <div class="tab-panel on" data-panel="desc"><p>{{ product.description }}</p></div>
+          <div class="tab-panel" data-panel="specs"><div class="spec-list"><div><b>Note</b>Specifications coming soon.</div></div></div>
+          <div class="tab-panel" data-panel="ship"><p>Orders placed before 2 PM ship the same day. Standard delivery takes 3–5 business days; express 1–2 days. Returns are free within 30 days — items must be unworn with original packaging. Refunds land back on your original payment method within 5 business days of receiving the return.</p></div>
+          <div class="tab-panel" data-panel="rev">
+            <div class="review-summary">
+              <div class="review-score"><b>{{ product.rating|floatformat:1 }}</b>
+                <div><span class="stars" aria-label="Rated {{ product.rating }} out of 5">
+                  <span class="stars-bg">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                  <span class="stars-fg" style="width:{% widthratio product.rating 5 100 %}%">{% for _ in "12345"|make_list %}<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8L12 2.8z"/></svg>{% endfor %}</span>
+                </span></div>
+                <span style="color:var(--mut);font-size:12.5px">{{ product.reviews }} reviews</span>
+              </div>
+            </div>
+            <p style="color:var(--mut);font-size:13px;margin-top:18px">Customer reviews will appear here soon.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" id="relatedSec" style="display:none;padding-top:20px">
+    <div class="container-wide">
+      <div class="sec-head"><div><span class="overline">Pairs well with</span><h2 class="display">You May Also Like</h2></div></div>
+      <div class="grid-products" id="related"></div>
+    </div>
+  </section>
+
+  <section class="section" id="recentSec" style="display:none;padding-top:0">
+    <div class="container-wide">
+      <div class="sec-head"><div><span class="overline">Your history</span><h2 class="display">Recently Viewed</h2></div></div>
+      <div class="grid-products" id="recent"></div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block scripts %}<script src="{% static 'assets/js/db.js' %}?v=2"></script>
+  <script src="{% static 'assets/js/ui.js' %}?v=3"></script>
+  <script src="{% static 'assets/js/product.js' %}?v=4"></script>{% endblock %}

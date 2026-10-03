@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Orders — AERON{% endblock %}
+{% block page_id %}orders{% endblock %}
+
+{% block content %}
+  <div class="container-wide page-head">
+    <p class="crumbs"><a href="{% url 'home' %}">Home</a> <span>/</span> <a href="{% url 'account' %}">Account</a> <span>/</span> <span>My Orders</span></p>
+    <h1 class="display">My Orders</h1>
+  </div>
+
+  <div class="container-wide">
+    {% if orders %}
+      {% for order in orders %}
+      <div class="order-card">
+        <div class="order-head">
+          <b><a href="{% url 'order_detail' order.id %}" style="color:var(--ink)">#{{ order.id }}</a></b>
+          <span class="oh-meta">{{ order.created_at|date:"M j, Y" }} · {{ order.items.count }} item(s)</span>
+          <span class="status-badge {{ order.status_class }}">{{ order.get_status_display }}</span>
+          <span class="order-total">${{ order.total|floatformat:"-2" }}</span>
+          <a class="btn btn-ghost btn-sm" href="{% url 'order_detail' order.id %}">View</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <h3>No orders yet</h3>
+        <p>When you place an order, it will show up here.</p>
+        <a class="btn btn-dark" href="{% url 'shop' %}">Start Shopping</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'assets/js/orders.js' %}"></script>{% endblock %}
