@@ -1,2 +1,15 @@
-# Environment / secrets - never commit
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
 .env
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Secret keys
+*.log
